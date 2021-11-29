@@ -1,4 +1,11 @@
 import { useEffect, useState } from "react";
+import {
+  connectWallet,
+  getCurrentWalletConnected,
+  mintNFT 
+} from "./utils/interact.js";
+require('dotenv').config();
+const url = process.env.NFT_URL;
 
 const Minter = (props) => {
 
@@ -9,17 +16,49 @@ const Minter = (props) => {
   const [description, setDescription] = useState("");
   const [url, setURL] = useState("");
  
-  useEffect(async () => { //TODO: implement
-    
-  }, []);
+  useEffect(async () => {
+    const {address, status} = await getCurrentWalletConnected();
+    setWallet(address)
+    setStatus(status); 
+
+    addWalletListener(); 
+}, []);
+
+function addWalletListener() {
+  if (window.ethereum) {
+    window.ethereum.on("accountsChanged", (accounts) => {
+      if (accounts.length > 0) {
+        setWallet(accounts[0]);
+        setStatus("");
+      } else {
+        setWallet("");
+        setStatus("🦊 Connect to Metamask using the top right button.");
+      }
+    });
+  } else {
+    setStatus(
+      <p>
+        {" "}
+        🦊{" "}
+        <a target="_blank" href={`https://metamask.io/download.html`}>
+          You must install Metamask, a virtual Ethereum wallet, in your
+          browser.
+        </a>
+      </p>
+    );
+  }
+}
 
   const connectWalletPressed = async () => { //TODO: implement
-   
+    const walletResponse = await connectWallet();
+    setStatus(walletResponse.status);
+    setWallet(walletResponse.address); 
   };
 
-  const onMintPressed = async () => { //TODO: implement
-    
-  };
+  const onMintPressed = async () => {
+    const { status } = await mintNFT(url, name, description);
+    setStatus(status);
+};
 
   return (
     <div className="Minter">
@@ -35,11 +74,8 @@ const Minter = (props) => {
       </button>
 
       <br></br>
-      <h1 id="title">🧙‍♂️ Alchemy NFT Minter</h1>
-      <p>
-        Simply add your asset's link, name, and description, then press "Mint."
-      </p>
-      <form>
+      <h1 id="title">🧙‍♂️ UMUT'UN GÖTÜ NFT</h1>
+{/*       <form>
         <h2>🖼 Link to asset: </h2>
         <input
           type="text"
@@ -58,7 +94,7 @@ const Minter = (props) => {
           placeholder="e.g. Even cooler than cryptokitties ;)"
           onChange={(event) => setDescription(event.target.value)}
         />
-      </form>
+      </form> */}
       <button id="mintButton" onClick={onMintPressed}>
         Mint NFT
       </button>
